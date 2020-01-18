@@ -2,7 +2,7 @@ close all;
 clear
 
 %% test simulation 
-OFDM_TX; % run base transmitter which you can use for developing. 
+%OFDM_TX; % run base transmitter which you can use for developing. 
 
 [decoded_data]= MyOfdmReceiver(raw_rx_data);
  
@@ -10,7 +10,7 @@ OFDM_TX; % run base transmitter which you can use for developing.
 % to calculate BER
 [number,ber_QPSK_1] = biterr(tx_data,decoded_data);
 
-ber_simulation
+ber_simulation =  ber_QPSK_1
 
 
 %% test real world dat 
