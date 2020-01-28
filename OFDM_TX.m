@@ -3,7 +3,7 @@ clear;
 
 %% Params:
 
-CFO_FLAG = 0; % flag to enable CFO 
+CFO_FLAG = 1; % flag to enable CFO 
 DETECTION_OFFSET = 100; % to add packet detection error
 
 % Waveform params
