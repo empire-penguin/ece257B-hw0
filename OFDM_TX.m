@@ -149,7 +149,7 @@ TRIGGER_OFFSET_TOL_NS   = 3000;        % Trigger time offset toleration between 
 SAMP_FREQ               = 40e6;        % Sampling frequency
 
 rx_vec_air = [tx_vec_air, zeros(1,ceil((TRIGGER_OFFSET_TOL_NS*1e-9) / (1/SAMP_FREQ)))];
-rx_vec_air = rx_vec_air + 0*complex(randn(1,length(rx_vec_air)), randn(1,length(rx_vec_air)));
+rx_vec_air = rx_vec_air + 1*complex(randn(1,length(rx_vec_air)), randn(1,length(rx_vec_air)));
 
 
 % Decimate
