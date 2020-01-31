@@ -53,7 +53,7 @@ trel = poly2trellis(7, [171 133]);              % Define trellis
 tx_code = convenc(tx_data,trel);            % convultional encoder 
 
 % bits to signal space mapping these are you are x_k from the class
-tx_syms = mapping(tx_code', MOD_ORDER, 1/sqrt(MOD_ORDER));
+tx_syms = mapping(tx_code', MOD_ORDER, 1);
 
 figure(1);
 scatter(real(tx_syms), imag(tx_syms),'filled');
