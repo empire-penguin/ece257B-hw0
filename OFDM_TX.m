@@ -1,9 +1,9 @@
 
-clear;
+% clear;
 
 %% Params:
-
-CFO_FLAG = 1; % flag to enable CFO 
+should_plot = false;
+CFO_FLAG = 1; % flag to enable CFO
 DETECTION_OFFSET = 100; % to add packet detection error
 
 % Waveform params
@@ -18,9 +18,8 @@ N_SC                    = 64;                                     % Number of su
 CP_LEN                  = 16;                                     % Cyclic prefix length
 N_DATA_SYMS             = N_OFDM_SYMS * length(SC_IND_DATA);      % Number of data symbols (one per data-bearing subcarrier per OFDM symbol)
 
-channel_coding = .5; % coding rate 
-trellis_end_length = 8; % bits for trellis to end 
-
+channel_coding = .5; % coding rate
+trellis_end_length = 8; % bits for trellis to end
 
 %% Preamble
 % Preamble is a concatenation of multiple copies of STS and LTS
@@ -42,24 +41,24 @@ lts_t = ifft(lts_f, 64);
 
 preamble = [repmat(sts_t, 1, 30)  lts_t(33:64) lts_t lts_t];
 
-
 %% Generate a payload of random integers
 number_of_bits= (N_DATA_SYMS * MOD_ORDER - 2*trellis_end_length) * channel_coding;
-tx_data = randi(2, 1, number_of_bits) - 1; 
+tx_data = randi(2, 1, number_of_bits) - 1;
 
-% Forward Error Correction 
+% Forward Error Correction
 tx_data = double([tx_data zeros(1,trellis_end_length) ]);    % 8 bits padding
 trel = poly2trellis(7, [171 133]);              % Define trellis
-tx_code = convenc(tx_data,trel);            % convultional encoder 
+tx_code = convenc(tx_data,trel);            % convultional encoder
 
 % bits to signal space mapping these are you are x_k from the class
-scale = sqrt(2/3(2^MOD_ORDER-1))
+scale = sqrt(2/3*(2^MOD_ORDER-1))
 tx_syms = mapping(tx_code', MOD_ORDER, scale);
-
-figure(1);
-scatter(real(tx_syms), imag(tx_syms),'filled');
-title(' Signal Space of transmitted bits');
-xlabel('I'); ylabel('Q');
+if (should_plot)
+    figure(1);
+    scatter(real(tx_syms), imag(tx_syms),'filled');
+    title(' Signal Space of transmitted bits');
+    xlabel('I'); ylabel('Q');
+end
 
 % Reshape the symbol vector to a matrix with one column per OFDM symbol,
 tx_syms_mat = reshape(tx_syms, length(SC_IND_DATA), N_OFDM_SYMS);
@@ -69,8 +68,6 @@ pilots = [1 1 -1 1].';
 
 % Repeat the pilots across all OFDM symbols
 pilots_mat = repmat(pilots, 1, N_OFDM_SYMS);
-
-
 
 %% IFFT
 
@@ -96,8 +93,7 @@ tx_payload_vec = reshape(tx_payload_mat, 1, numel(tx_payload_mat));
 % Construct the full time-domain OFDM waveform
 tx_vec = [preamble tx_payload_vec];
 
-
-%% Interpolate, 
+%% Interpolate,
 % Interpolation filter basically implements the DAC before transmission
 % On the receiver's end decimation is performed to implement the ADC
 
@@ -114,24 +110,28 @@ tx_vec_2x = zeros(1, 2*numel(tx_vec_padded));
 tx_vec_2x(1:2:end) = tx_vec_padded;
 tx_vec_air = filter(interp_filt2, 1, tx_vec_2x);
 
-figure(2);
-plot(abs(tx_vec_2x));
-hold on;
-plot(abs(tx_vec_air(22:end)));
-xlim([20,50]);
-title('Interpolation visualized');
-xlabel('time'); ylabel('amplitude');
-legend('y = pre filtering','y = post filtering')
+if (should_plot)
+    figure(2);
+    plot(abs(tx_vec_2x));
+    hold on;
+    plot(abs(tx_vec_air(22:end)));
+    xlim([20,50]);
+    title('Interpolation visualized');
+    xlabel('time'); ylabel('amplitude');
+    legend('y = pre filtering','y = post filtering')
+end
 
 % Scale the Tx vector to +/- 1, becasue ADC and DAC take samples input from
 % 1 to -1
 tx_vec_air = TX_SCALE .* tx_vec_air ./ max(abs(tx_vec_air));
 
-figure(3);
-plot(db(abs(fftshift(fft(tx_vec_air)))));
-xlim([20000,60000]); ylim([0,65]);
-% in this plot, why do see four peaks?
+if (should_plot)
+    figure(3);
+    plot(db(abs(fftshift(fft(tx_vec_air)))));
+    xlim([20000,60000]); ylim([0,65]);
+end
 
+% in this plot, why do see four peaks?
 
 %% This part of code is for simulating the wireless channel.
 % You can later use the receiver raw data file instead to test your code.
@@ -152,9 +152,7 @@ SAMP_FREQ               = 40e6;        % Sampling frequency
 rx_vec_air = [tx_vec_air, zeros(1,ceil((TRIGGER_OFFSET_TOL_NS*1e-9) / (1/SAMP_FREQ)))];
 rx_vec_air = rx_vec_air + 1*complex(randn(1,length(rx_vec_air)), randn(1,length(rx_vec_air)));
 
-
 % Decimate
 raw_rx_dec = filter(interp_filt2, 1, rx_vec_air);
 raw_rx_data = [zeros(1,DETECTION_OFFSET) raw_rx_dec(1:2:end)];
-
 
